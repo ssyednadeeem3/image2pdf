@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image2PDF.AI - Convert Images to PDF Instantly</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0e0e10;
+      --card: #1f1f24;
+      --accent: #6366f1;
+      --text: #f1f1f1;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    p.subtitle {
+      color: #a1a1aa;
+      margin-bottom: 2rem;
+    }
+
+    .upload-card {
+      background: var(--card);
+      padding: 2rem;
+      border-radius: 1rem;
+      width: 100%;
+      max-width: 600px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    label.upload-label {
+      display: block;
+      background: var(--accent);
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+    }
+
+    #preview {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+    }
+
+    #preview img {
+      max-height: 100px;
+      border-radius: 0.5rem;
+      border: 1px solid #333;
+    }
+
+    button {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #4f46e5;
+    }
+
+    a#downloadLink {
+      display: none;
+      margin-top: 1.5rem;
+      text-decoration: none;
+      background-color: #10b981;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+    }
+
+    footer {
+      margin-top: 4rem;
+      font-size: 0.9rem;
+      color: #888;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🖼️ Image2PDF.AI</h1>
+  <p class="subtitle">Convert your images into a single high-quality PDF. 100% free, fast, and private.</p>
+  <div class="upload-card">
+    <label class="upload-label" for="upload">Select Images</label>
+    <input type="file" id="upload" accept="image/*" multiple />
+    <div id="preview"></div>
+    <button onclick="convertToPDF()">Convert to PDF</button>
+    <a id="downloadLink">Download PDF</a>
+  </div>
+
+  <footer>
+    &copy; 2025 Image2PDF.AI — Built with ❤️ for simplicity and speed.
+  </footer>
+
+  <script>
+    const { jsPDF } = window.jspdf;
+    let imageFiles = [];
+
+    document.getElementById("upload").addEventListener("change", function (e) {
+      imageFiles = Array.from(e.target.files);
+      const preview = document.getElementById("preview");
+      preview.innerHTML = "";
+      imageFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    async function convertToPDF() {
+      if (imageFiles.length === 0) {
+        alert("Please upload at least one image.");
+        return;
+      }
+
+      const pdf = new jsPDF();
+      for (let i = 0; i < imageFiles.length; i++) {
+        const imgData = await readFileAsDataURL(imageFiles[i]);
+        const img = new Image();
+        img.src = imgData;
+        await new Promise(resolve => img.onload = resolve);
+        const width = pdf.internal.pageSize.getWidth();
+        const height = (img.height * width) / img.width;
+        if (i !== 0) pdf.addPage();
+        pdf.addImage(img, "JPEG", 0, 0, width, height);
+      }
+      const blob = pdf.output("blob");
+      const url = URL.createObjectURL(blob);
+      const link = document.getElementById("downloadLink");
+      link.href = url;
+      link.download = "converted.pdf";
+      link.style.display = "inline-block";
+      link.innerText = "Download PDF";
+    }
+
+    function readFileAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+  </script>
+</body>
+
+</html>
